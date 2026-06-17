@@ -1,41 +1,58 @@
-/**
- * Role Context — simulates the Auth Service role system.
- *
- * GO_API INTEGRATION NOTE:
- * Replace the mock login logic below with calls to:
- *   POST http://localhost:8081/auth/login  { username, password }
- * which returns: { token, user: { id, name, role, room_number } }
- *
- * Then store the token and replace useRole() consumers to read from
- * the real authenticated user object.
- */
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const RoleContext = createContext(null);
 
-// GO_API: These demo users simulate what the Go Auth Service would return.
-// In production, these come from POST /auth/login response.
 export const DEMO_USERS = [
-  { id: 'u1',                      name: 'James Wilson',   role: 'admin',  room_number: null,   avatar: 'JW' },
-  // GO_API: staff IDs come from Auth Service user records — these match StaffMember entity ids
-  { id: '6a2968b6a21deb4b56551654', name: 'Maria Garcia',   role: 'staff',  room_number: null,   specialty: 'plumbing',   avatar: 'MG' },
-  { id: '6a2968b6a21deb4b56551655', name: 'David Chen',     role: 'staff',  room_number: null,   specialty: 'electrical', avatar: 'DC' },
-  { id: '6a2968b6a21deb4b56551656', name: 'Sarah Johnson',  role: 'staff',  room_number: null,   specialty: 'hvac',       avatar: 'SJ' },
-  { id: 'u5', name: 'Guest Room 101', role: 'guest',  room_number: '101',  avatar: 'G1' },
-  { id: 'u6', name: 'Guest Room 205', role: 'guest',  room_number: '205',  avatar: 'G2' },
-  { id: 'u7', name: 'Guest Room 312', role: 'guest',  room_number: '312',  avatar: 'G3' },
+  { id: "u1", name: "James Wilson", email: "admin@luxstay.local", role: "admin", room_number: null, avatar: "JW" },
+  { id: "6a2968b6a21deb4b56551654", name: "Maria Garcia", email: "maria@luxstay.local", role: "staff", room_number: null, specialty: "plumbing", avatar: "MG" },
+  { id: "6a2968b6a21deb4b56551655", name: "David Chen", email: "david@luxstay.local", role: "staff", room_number: null, specialty: "electrical", avatar: "DC" },
+  { id: "6a2968b6a21deb4b56551656", name: "Sarah Johnson", email: "sarah@luxstay.local", role: "staff", room_number: null, specialty: "hvac", avatar: "SJ" },
+  { id: "u5", name: "Guest Room 101", email: "guest101@luxstay.local", role: "guest", room_number: "101", avatar: "G1" },
+  { id: "u6", name: "Guest Room 205", email: "guest205@luxstay.local", role: "guest", room_number: "205", avatar: "G2" }
 ];
 
-export function RoleProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(DEMO_USERS[0]);
+function readAuthUser() {
+  const raw = localStorage.getItem("luxstay_auth_user");
+  if (!raw) return null;
 
-  // GO_API: Replace this with actual POST /auth/login call
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function RoleProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(() => readAuthUser() || DEMO_USERS[0]);
+
+  useEffect(() => {
+    const handler = (event) => {
+      setCurrentUser(event.detail || readAuthUser() || DEMO_USERS[0]);
+    };
+
+    window.addEventListener("luxstay-auth-changed", handler);
+
+    return () => {
+      window.removeEventListener("luxstay-auth-changed", handler);
+    };
+  }, []);
+
   const login = (userId) => {
-    const user = DEMO_USERS.find(u => u.id === userId);
-    if (user) setCurrentUser(user);
+    const user = DEMO_USERS.find((u) => u.id === userId);
+    if (!user) return;
+
+    localStorage.setItem("luxstay_auth_user", JSON.stringify(user));
+    localStorage.setItem("luxstay_auth_token", `local-token-${user.id}`);
+    setCurrentUser(user);
+    window.dispatchEvent(new CustomEvent("luxstay-auth-changed", { detail: user }));
   };
 
-  const logout = () => setCurrentUser(DEMO_USERS[0]);
+  const logout = () => {
+    localStorage.removeItem("luxstay_auth_user");
+    localStorage.removeItem("luxstay_auth_token");
+    setCurrentUser(DEMO_USERS[0]);
+    window.dispatchEvent(new CustomEvent("luxstay-auth-changed", { detail: null }));
+  };
 
   return (
     <RoleContext.Provider value={{ currentUser, login, logout, DEMO_USERS }}>
