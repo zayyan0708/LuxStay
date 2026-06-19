@@ -7,7 +7,7 @@
  *   Real-time: SSE stream pushes chat_message events to browser
  */
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { useRole } from '@/lib/roleContext';
 import { Send, MessageSquare, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -31,8 +31,8 @@ export default function ChatHub() {
     const load = async () => {
       // GO_API: admin → goFetch(GO_API.TICKETS.LIST), staff → goFetch(GO_API.TICKETS.BY_STAFF(id))
       const data = currentUser?.role === 'admin'
-        ? await base44.entities.Ticket.list('-updated_date', 50)
-        : await base44.entities.Ticket.filter({ assigned_to_id: currentUser?.id });
+        ? await luxStay.entities.Ticket.list('-updated_date', 50)
+        : await luxStay.entities.Ticket.filter({ assigned_to_id: currentUser?.id });
       setTickets(data);
       if (data.length > 0 && !selectedTicket) setSelectedTicket(data[0]);
     };
@@ -43,12 +43,12 @@ export default function ChatHub() {
   useEffect(() => {
     if (!selectedTicket?.id) return;
     // GO_API: goFetch(GO_API.CHAT.MESSAGES(selectedTicket.id))
-    base44.entities.ChatMessage.filter({ ticket_id: selectedTicket.id })
+    luxStay.entities.ChatMessage.filter({ ticket_id: selectedTicket.id })
       .then(msgs => setMessages(msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date))))
       .catch(() => {});
 
     // GO_API: replace with connectGoSSE() listening for chat_message events
-    const unsub = base44.entities.ChatMessage.subscribe((event) => {
+    const unsub = luxStay.entities.ChatMessage.subscribe((event) => {
       if (event.data?.ticket_id === selectedTicket.id && event.type === 'create') {
         setMessages(p => [...p, event.data]);
       }
@@ -67,14 +67,14 @@ export default function ChatHub() {
     try {
       // GO_API: goFetch(GO_API.CHAT.SEND(selectedTicket.id), { method:'POST', body:{ content: input } })
       // Gateway will save and publish to MQTT: hotel/chat/{ticketId}
-      await base44.entities.ChatMessage.create({
+      await luxStay.entities.ChatMessage.create({
         ticket_id: selectedTicket.id,
         sender_name: currentUser?.name,
         sender_role: currentUser?.role,
         content: input,
       });
       // Simulate MQTT event log
-      await base44.entities.EventLog.create({
+      await luxStay.entities.EventLog.create({
         event_type: 'chat_message',
         mqtt_topic: `hotel/chat/${selectedTicket.id}`,
         ticket_id: selectedTicket.id,

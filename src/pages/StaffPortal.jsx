@@ -6,7 +6,7 @@
  * GO_API: PATCH /api/tickets/:id/status  { status }
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { useRole } from '@/lib/roleContext';
 import { Wrench, Clock, CheckCircle2, ArrowRight, RefreshCw } from 'lucide-react';
 import { StatusBadge, PriorityBadge, CategoryBadge } from '@/components/tickets/StatusBadge';
@@ -27,7 +27,7 @@ export default function StaffPortal() {
     try {
       // GO_API: goFetch(GO_API.TICKETS.BY_STAFF(currentUser.id))
       // Staff only sees assigned tickets — enforced at Gateway level
-      const all = await base44.entities.Ticket.filter({ assigned_to_id: currentUser?.id });
+      const all = await luxStay.entities.Ticket.filter({ assigned_to_id: currentUser?.id });
       setTickets(all);
     } catch {
       toast.error('Failed to load tasks');
@@ -40,7 +40,7 @@ export default function StaffPortal() {
 
   // GO_API: Replace with SSE stream
   useEffect(() => {
-    const unsub = base44.entities.Ticket.subscribe((event) => {
+    const unsub = luxStay.entities.Ticket.subscribe((event) => {
       if (event.type === 'update' && event.data?.assigned_to_id === currentUser?.id) {
         setTickets(p => p.map(t => t.id === event.id ? event.data : t));
       }
@@ -57,11 +57,11 @@ export default function StaffPortal() {
     setUpdating(ticket.id);
     try {
       // GO_API: goFetch(GO_API.TICKETS.STATUS(ticket.id), { method:'PATCH', body:{ status: next } })
-      const updated = await base44.entities.Ticket.update(ticket.id, {
+      const updated = await luxStay.entities.Ticket.update(ticket.id, {
         status: next,
         ...(next === 'RESOLVED' ? { resolved_at: new Date().toISOString() } : {}),
       });
-      await base44.entities.EventLog.create({
+      await luxStay.entities.EventLog.create({
         event_type: 'status_updated',
         mqtt_topic: 'hotel/tickets/status_updated',
         ticket_id: ticket.id,

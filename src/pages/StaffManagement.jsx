@@ -3,7 +3,7 @@
  * GO_API: GET/POST/PUT /api/staff (Gateway Service)
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { Plus, X, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ function StaffForm({ onSave, onCancel }) {
     setSaving(true);
     try {
       // GO_API: goFetch(GO_API.STAFF.CREATE, { method:'POST', body: form })
-      await base44.entities.StaffMember.create({ ...form, active_tickets: 0 });
+      await luxStay.entities.StaffMember.create({ ...form, active_tickets: 0 });
       toast.success('Staff member added');
       onSave();
     } catch { toast.error('Failed to add staff'); }
@@ -91,8 +91,8 @@ export default function StaffManagement() {
     setLoading(true);
     const [s, t] = await Promise.all([
       // GO_API: goFetch(GO_API.STAFF.LIST), goFetch(GO_API.TICKETS.LIST)
-      base44.entities.StaffMember.list(),
-      base44.entities.Ticket.list(),
+      luxStay.entities.StaffMember.list(),
+      luxStay.entities.Ticket.list(),
     ]);
     setStaff(s);
     setTickets(t);
@@ -103,13 +103,13 @@ export default function StaffManagement() {
 
   const updateStatus = async (staffId, newStatus) => {
     // GO_API: goFetch(GO_API.STAFF.UPDATE(staffId), { method:'PUT', body:{ status: newStatus } })
-    await base44.entities.StaffMember.update(staffId, { status: newStatus });
+    await luxStay.entities.StaffMember.update(staffId, { status: newStatus });
     setStaff(p => p.map(s => s.id === staffId ? { ...s, status: newStatus } : s));
     toast.success('Status updated');
   };
 
   const deleteStaff = async (staffId) => {
-    await base44.entities.StaffMember.delete(staffId);
+    await luxStay.entities.StaffMember.delete(staffId);
     setStaff(p => p.filter(s => s.id !== staffId));
     toast.success('Staff member removed');
   };

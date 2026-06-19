@@ -115,7 +115,7 @@ export async function goFetch(url, options = {}) {
 
 /**
  * GO_API: Connect to the SSE stream from the Gateway service.
- * Call this instead of Base44 real-time subscriptions once Go backend is live.
+ * Call this instead of luxStay real-time subscriptions once Go backend is live.
  *
  * @param {Function} onEvent - callback(eventType, data)
  * @returns {Function} cleanup function
@@ -128,6 +128,6 @@ export function connectGoSSE(onEvent) {
   // es.onerror = () => console.warn('[SSE] Connection lost, retrying...');
   // return () => es.close();
 
-  console.info('[GO_API] SSE not connected — using Base44 real-time. Connect via GO_API.SSE.STREAM when Go Gateway is running.');
+  console.info('[GO_API] SSE not connected — using luxStay real-time. Connect via GO_API.SSE.STREAM when Go Gateway is running.');
   return () => {};
 }

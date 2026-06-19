@@ -4,7 +4,7 @@
  * Filters map to query params: ?status=OPEN&priority=urgent&room=101
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { Plus, Search, Filter, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,8 +29,8 @@ export default function AllTickets() {
     try {
       // GO_API: goFetch(GO_API.TICKETS.LIST) + goFetch(GO_API.STAFF.LIST)
       const [t, s] = await Promise.all([
-        base44.entities.Ticket.list('-created_date', 100),
-        base44.entities.StaffMember.list(),
+        luxStay.entities.Ticket.list('-created_date', 100),
+        luxStay.entities.StaffMember.list(),
       ]);
       setTickets(t);
       setStaff(s);
@@ -45,7 +45,7 @@ export default function AllTickets() {
 
   // GO_API: Replace with SSE stream from Gateway
   useEffect(() => {
-    const unsub = base44.entities.Ticket.subscribe((event) => {
+    const unsub = luxStay.entities.Ticket.subscribe((event) => {
       if (event.type === 'create') setTickets(p => [event.data, ...p]);
       else if (event.type === 'update') setTickets(p => p.map(t => t.id === event.id ? event.data : t));
       else if (event.type === 'delete') setTickets(p => p.filter(t => t.id !== event.id));

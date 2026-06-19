@@ -263,7 +263,7 @@ function saveCustomAccount(account) {
   localStorage.setItem("luxstay_accounts", JSON.stringify([...custom, account]));
 }
 
-export const base44 = {
+export const luxStay = {
   entities: {
     Ticket: makeEntity("Ticket"),
     StaffMember: makeEntity("StaffMember"),

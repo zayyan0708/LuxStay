@@ -17,7 +17,7 @@
  *     connectGoSSE((type, data) => addEvent(type, data));
  */
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { Activity, Wifi, MessageSquare, Tag, ArrowUpCircle, CheckCircle2, RefreshCw, Radio } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,7 +46,7 @@ export default function EventLog() {
   const load = async () => {
     setLoading(true);
     // GO_API: goFetch(GO_API.NOTIFIER.EVENTS) — from Notifier Service
-    const data = await base44.entities.EventLog.list('-created_date', 100);
+    const data = await luxStay.entities.EventLog.list('-created_date', 100);
     setEvents(data);
     setLoading(false);
   };
@@ -55,7 +55,7 @@ export default function EventLog() {
 
   // GO_API: Replace with connectGoSSE((type, data) => setEvents(p => [data, ...p].slice(0, 100)))
   useEffect(() => {
-    const unsub = base44.entities.EventLog.subscribe((event) => {
+    const unsub = luxStay.entities.EventLog.subscribe((event) => {
       if (event.type === 'create') {
         setEvents(p => [event.data, ...p].slice(0, 100));
         setLiveCount(c => c + 1);

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { luxStay } from "@/api/Client";
 
 const AuthContext = createContext(null);
 
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
 
     try {
-      const currentUser = await base44.auth.me();
+      const currentUser = await luxStay.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
     } catch {
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = (shouldRedirect = true) => {
-    base44.auth.logout();
+    luxStay.auth.logout();
     setUser(null);
     setIsAuthenticated(false);
 

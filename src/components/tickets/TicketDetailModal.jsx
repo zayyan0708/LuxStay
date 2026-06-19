@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Send, User, Clock, ArrowRight } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { useRole } from '@/lib/roleContext';
 import { StatusBadge, PriorityBadge, CategoryBadge } from './StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
-// GO_API: Replace all base44 calls with goFetch():
+// GO_API: Replace all luxStay calls with goFetch():
 //   PATCH GO_API.TICKETS.ASSIGN(id)  { staff_id, staff_name }
 //   PATCH GO_API.TICKETS.STATUS(id)  { status }
 //   GET/POST GO_API.CHAT.MESSAGES(id) / GO_API.CHAT.SEND(id)
@@ -29,11 +29,11 @@ export default function TicketDetailModal({ ticket, onClose, onUpdated, staffLis
   // GO_API: Replace with goFetch(GO_API.CHAT.MESSAGES(ticket.id))
   useEffect(() => {
     if (!ticket?.id) return;
-    base44.entities.ChatMessage.filter({ ticket_id: ticket.id })
+    luxStay.entities.ChatMessage.filter({ ticket_id: ticket.id })
       .then(setMessages).catch(() => {});
 
     // GO_API: Replace with connectGoSSE + listen for chat_message events for this ticket
-    const unsub = base44.entities.ChatMessage.subscribe((event) => {
+    const unsub = luxStay.entities.ChatMessage.subscribe((event) => {
       if (event.data?.ticket_id === ticket.id) {
         setMessages(prev =>
           event.type === 'create' ? [...prev, event.data] : prev
@@ -48,14 +48,14 @@ export default function TicketDetailModal({ ticket, onClose, onUpdated, staffLis
     setSending(true);
     try {
       // GO_API: swap with goFetch(GO_API.CHAT.SEND(ticket.id), { method:'POST', body:{ content: chatInput } })
-      await base44.entities.ChatMessage.create({
+      await luxStay.entities.ChatMessage.create({
         ticket_id: ticket.id,
         sender_name: currentUser?.name,
         sender_role: currentUser?.role,
         content: chatInput,
       });
       // GO_API: Gateway publishes to MQTT topic: hotel/chat/{ticketId}
-      await base44.entities.EventLog.create({
+      await luxStay.entities.EventLog.create({
         event_type: 'chat_message',
         mqtt_topic: `hotel/chat/${ticket.id}`,
         ticket_id: ticket.id,
@@ -76,11 +76,11 @@ export default function TicketDetailModal({ ticket, onClose, onUpdated, staffLis
     setUpdating(true);
     try {
       // GO_API: swap with goFetch(GO_API.TICKETS.STATUS(ticket.id), { method:'PATCH', body:{ status: newStatus } })
-      const updated = await base44.entities.Ticket.update(ticket.id, {
+      const updated = await luxStay.entities.Ticket.update(ticket.id, {
         status: newStatus,
         ...(newStatus === 'RESOLVED' ? { resolved_at: new Date().toISOString() } : {}),
       });
-      await base44.entities.EventLog.create({
+      await luxStay.entities.EventLog.create({
         event_type: 'status_updated',
         mqtt_topic: 'hotel/tickets/status_updated',
         ticket_id: ticket.id,
@@ -104,12 +104,12 @@ export default function TicketDetailModal({ ticket, onClose, onUpdated, staffLis
     setUpdating(true);
     try {
       // GO_API: swap with goFetch(GO_API.TICKETS.ASSIGN(ticket.id), { method:'PATCH', body:{ staff_id: staffId, staff_name: staff.name } })
-      const updated = await base44.entities.Ticket.update(ticket.id, {
+      const updated = await luxStay.entities.Ticket.update(ticket.id, {
         assigned_to_id: staffId,
         assigned_to_name: staff.name,
         status: ticket.status === 'OPEN' ? 'IN_PROGRESS' : ticket.status,
       });
-      await base44.entities.EventLog.create({
+      await luxStay.entities.EventLog.create({
         event_type: 'ticket_assigned',
         mqtt_topic: 'hotel/tickets/assigned',
         ticket_id: ticket.id,

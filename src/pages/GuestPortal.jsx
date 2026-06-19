@@ -5,7 +5,7 @@
  * Room constraint is enforced by Auth Service on the Go side.
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { useRole } from '@/lib/roleContext';
 import { Plus, Hotel, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import CreateTicketModal from '@/components/tickets/CreateTicketModal';
@@ -26,7 +26,7 @@ export default function GuestPortal() {
     try {
       // GO_API: goFetch(GO_API.TICKETS.BY_ROOM(currentUser.room_number))
       // Auth Service enforces room_number matches the logged-in guest's room
-      const data = await base44.entities.Ticket.filter({ room_number: currentUser?.room_number });
+      const data = await luxStay.entities.Ticket.filter({ room_number: currentUser?.room_number });
       setTickets(data.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
     } finally {
       setLoading(false);
@@ -37,7 +37,7 @@ export default function GuestPortal() {
 
   // GO_API: Replace with SSE stream
   useEffect(() => {
-    const unsub = base44.entities.Ticket.subscribe((event) => {
+    const unsub = luxStay.entities.Ticket.subscribe((event) => {
       if (event.data?.room_number !== currentUser?.room_number) return;
       if (event.type === 'create') setTickets(p => [event.data, ...p]);
       else if (event.type === 'update') setTickets(p => p.map(t => t.id === event.id ? event.data : t));

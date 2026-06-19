@@ -1,7 +1,7 @@
 import { Bell, Wifi, WifiOff } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 
 export default function TopBar() {
   const { currentUser } = useRole();
@@ -13,7 +13,7 @@ export default function TopBar() {
   // useEffect(() => connectGoSSE((type, data) => setRecentCount(c => c+1)), []);
 
   useEffect(() => {
-    const unsub = base44.entities.EventLog.subscribe((event) => {
+    const unsub = luxStay.entities.EventLog.subscribe((event) => {
       if (event.type === 'create') setRecentCount(c => c + 1);
     });
     return unsub;

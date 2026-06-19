@@ -6,7 +6,7 @@
  *   - Events:  EventSource GET /api/events/stream (Gateway SSE → MQTT bridge)
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { useRole } from '@/lib/roleContext';
 import { Plus, TrendingUp, Clock, CheckCircle2, AlertCircle, Users, Zap } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
@@ -16,9 +16,9 @@ import TicketDetailModal from '@/components/tickets/TicketDetailModal';
 import { motion } from 'framer-motion';
 
 // GO_API: import { goFetch, GO_API } from '@/lib/goApiConfig';
-// Replace base44 calls:
-//   base44.entities.Ticket.list() → goFetch(GO_API.TICKETS.LIST)
-//   base44.entities.StaffMember.list() → goFetch(GO_API.STAFF.LIST)
+// Replace luxStay calls:
+//   luxStay.entities.Ticket.list() → goFetch(GO_API.TICKETS.LIST)
+//   luxStay.entities.StaffMember.list() → goFetch(GO_API.STAFF.LIST)
 
 function StatCard({ label, value, icon: Icon, color, sub }) {
   return (
@@ -58,8 +58,8 @@ export default function AdminDashboard() {
     setLoading(true);
     // GO_API: replace with goFetch(GO_API.TICKETS.LIST) and goFetch(GO_API.STAFF.LIST)
     const [t, s] = await Promise.all([
-      base44.entities.Ticket.list('-created_date', 50),
-      base44.entities.StaffMember.list(),
+      luxStay.entities.Ticket.list('-created_date', 50),
+      luxStay.entities.StaffMember.list(),
     ]);
     setTickets(t);
     setStaff(s);
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
 
   // GO_API: Replace with connectGoSSE() from goApiConfig for real MQTT → SSE events
   useEffect(() => {
-    const unsub = base44.entities.Ticket.subscribe((event) => {
+    const unsub = luxStay.entities.Ticket.subscribe((event) => {
       if (event.type === 'create') setTickets(p => [event.data, ...p]);
       else if (event.type === 'update') setTickets(p => p.map(t => t.id === event.id ? event.data : t));
       else if (event.type === 'delete') setTickets(p => p.filter(t => t.id !== event.id));

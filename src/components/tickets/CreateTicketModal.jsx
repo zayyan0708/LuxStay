@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Plus } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { luxStay } from '@/api/Client';
 import { useRole } from '@/lib/roleContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-// GO_API: Replace base44 calls with:
+// GO_API: Replace luxStay calls with:
 //   import { goFetch, GO_API } from '@/lib/goApiConfig';
 //   await goFetch(GO_API.TICKETS.CREATE, { method: 'POST', body: ticketData });
 // The Gateway will persist to SQLite and publish to MQTT topic: hotel/tickets/created
@@ -51,11 +51,11 @@ export default function CreateTicketModal({ onClose, onCreated, presetRoom }) {
     setLoading(true);
     try {
       // GO_API: swap with goFetch(GO_API.TICKETS.CREATE, { method:'POST', body: form })
-      const created = await base44.entities.Ticket.create(form);
+      const created = await luxStay.entities.Ticket.create(form);
 
       // GO_API: The Go Gateway will publish this event to MQTT automatically.
       // For now we simulate it by creating an EventLog entry:
-      await base44.entities.EventLog.create({
+      await luxStay.entities.EventLog.create({
         event_type: 'ticket_created',
         mqtt_topic: 'hotel/tickets/created',
         ticket_id: created.id,
